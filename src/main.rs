@@ -93,9 +93,10 @@ async fn main() -> Result<(), Error> {
           let statement = client
               .prepare(
                   "INSERT INTO files (file_name, full_path, checksum, last_access, last_write, created, file_size)
-                   VALUES ($1, $2, $3, $4, $5, $6)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7)
                    ON CONFLICT (full_path) DO UPDATE
                    SET file_name = EXCLUDED.file_name,
+                       full_path = EXCLUDED.full_path,
                        checksum = EXCLUDED.checksum,
                        last_access = EXCLUDED.last_access,
                        last_write = EXCLUDED.last_write,
