@@ -1,9 +1,9 @@
 use std::path::Path;
-use std::time::{Instant, SystemTime};
+use std::time::{Instant};
 
 use clap::Parser;
 use sha2::{Digest, Sha256};
-use tokio::time::error::Elapsed;
+//use tokio::time::error::Elapsed;
 use tokio_postgres::{NoTls, Error};
 use walkdir::WalkDir;
 
@@ -92,7 +92,7 @@ async fn main() -> Result<(), Error> {
 
           let statement = client
               .prepare(
-                  "INSERT INTO files (file_name, full_path, checksum, last_access, last_write, created)
+                  "INSERT INTO files (file_name, full_path, checksum, last_access, last_write, created, file_size)
                    VALUES ($1, $2, $3, $4, $5, $6)
                    ON CONFLICT (full_path) DO UPDATE
                    SET file_name = EXCLUDED.file_name,
