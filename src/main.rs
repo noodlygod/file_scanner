@@ -40,7 +40,8 @@ async fn main() -> Result<(), Error> {
               checksum    TEXT,
               last_access TIMESTAMPTZ,
               last_write  TIMESTAMPTZ,
-              created     TIMESTAMPTZ
+              created     TIMESTAMPTZ,
+              file_size   BIGINT
           )
           ",
       ).await?;
@@ -53,6 +54,8 @@ async fn main() -> Result<(), Error> {
           let file_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
           let full_path = path.to_string_lossy().to_string();
 
+          eprintln!("Processing: {}", &full_path);
+
           let metadata = match entry.metadata() {
               Ok(meta) => Some(meta),
               Err(e) => {
@@ -61,16 +64,17 @@ async fn main() -> Result<(), Error> {
               }
           };
 
-          let (last_access, last_write, created) = if let Some(meta) = metadata {
+          let (last_access, last_write, created, file_size) = if let Some(meta) = metadata {
               (
                   meta.accessed().ok().map(chrono::DateTime::<chrono::Utc>::from),
                   meta.modified().ok().map(chrono::DateTime::<chrono::Utc>::from),
                   meta.created().ok().map(chrono::DateTime::<chrono::Utc>::from),
+                  Some(meta.len() as i64),
               )
           } else {
-              (None, None, None)
+              (None, None, None, None)
           };
-
+          
           let checksum = match std::fs::read(path) {
               Ok(data) => {
                   let mut hasher = Sha256::new();
@@ -93,16 +97,17 @@ async fn main() -> Result<(), Error> {
                        checksum = EXCLUDED.checksum,
                        last_access = EXCLUDED.last_access,
                        last_write = EXCLUDED.last_write,
-                       created = EXCLUDED.created",
+                       created = EXCLUDED.created,
+                       file_size = EXCLUDED.file_size",
               ).await?;
 
           client
               .execute(
                   &statement,
-                  &[&file_name, &full_path, &checksum, &last_access, &last_write, &created],
+                  &[&file_name, &full_path, &checksum, &last_access, &last_write, &created, &file_size],
               ).await?;
       }
-          }
+    }
 
   println!("Scanning complete.");
   Ok(())
