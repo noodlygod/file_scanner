@@ -1,7 +1,9 @@
 use std::path::Path;
+use std::time::{Instant, SystemTime};
 
 use clap::Parser;
 use sha2::{Digest, Sha256};
+use tokio::time::error::Elapsed;
 use tokio_postgres::{NoTls, Error};
 use walkdir::WalkDir;
 
@@ -17,7 +19,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-
+  let start_time = Instant::now();
   let args = Args::parse();
   let path = Path::new(&args.path);
 
@@ -109,6 +111,8 @@ async fn main() -> Result<(), Error> {
       }
     }
 
-  println!("Scanning complete.");
+  let elapsed = start_time.elapsed();
+  println!("Scanning complete, execution time: {:.2?}", elapsed);
+
   Ok(())
 }
