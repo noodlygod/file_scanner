@@ -1,8 +1,9 @@
 use std::path::Path;
 use std::time::{Instant};
-
+use seahash::SeaHasher;
+use std::hash::{Hasher};
 use clap::Parser;
-use sha2::{Digest, Sha256};
+//use sha2::{Digest, Sha256};
 //use tokio::time::error::Elapsed;
 use tokio_postgres::{NoTls, Error};
 use walkdir::WalkDir;
@@ -79,9 +80,9 @@ async fn main() -> Result<(), Error> {
           
           let checksum = match std::fs::read(path) {
               Ok(data) => {
-                  let mut hasher = Sha256::new();
-                  hasher.update(&data);
-                  let result = hasher.finalize();
+                  let mut hasher = SeaHasher::new();
+                  hasher.write(&data);
+                  let result = hasher.finish();
                   Some(format!("{:x}", result))
               }
               Err(e) => {
